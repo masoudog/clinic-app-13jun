@@ -1,0 +1,9 @@
+{
+  "appName": "clinic-app",
+  "basePath": "./",
+  "buildSpec": "amplify.yml",
+  "envName": "dev",
+  "projectName": "clinic-app",
+  "region": "us-east-1",
+  "version": "3.14.3"
+}

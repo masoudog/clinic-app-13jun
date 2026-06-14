@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&family=Estedad:wght@200;300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  direction: rtl;
+}
+
+body {
+  @apply bg-bg text-ink;
+  font-family: 'Vazirmatn', 'Estedad', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  font-feature-settings: 'ss01', 'ss02';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reset form elements */
+button {
+  @apply font-inherit cursor-pointer border-none bg-none text-inherit;
+}
+
+input,
+textarea,
+select {
+  @apply font-inherit text-inherit;
+}
+
+/* Typography scale */
+@layer base {
+  h1 {
+    @apply text-4xl md:text-5xl font-bold;
+  }
+  h2 {
+    @apply text-3xl md:text-4xl font-bold;
+  }
+  h3 {
+    @apply text-2xl md:text-3xl font-bold;
+  }
+  h4 {
+    @apply text-xl md:text-2xl font-semibold;
+  }
+  p {
+    @apply text-base leading-relaxed;
+  }
+}
