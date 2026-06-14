@@ -214,6 +214,80 @@ Every push to your main branch automatically:
 3. Deploys to `.amplifyapp.com` domain
 4. Updates live URL with new version
 
+## Deploy with CloudFormation
+
+**Infrastructure as Code approach** — Deploy using AWS CloudFormation for reproducible, version-controlled deployments.
+
+### Prerequisites
+
+- AWS CLI configured locally
+- PowerShell (Windows) or bash (Mac/Linux)
+- GitHub Personal Access Token (create at https://github.com/settings/tokens)
+
+### Quick Deploy
+
+```powershell
+# From repository root
+cd infra
+
+# Create GitHub token and set variables
+$githubToken = "ghp_xxxxxxx..."  # Your token from Step 1
+
+# Deploy the stack
+aws cloudformation create-stack `
+  --stack-name clinic-app-amplify-stack `
+  --template-body file://amplify-hosting.yml `
+  --parameters `
+    ParameterKey=AppName,ParameterValue=clinic-app-13jun `
+    ParameterKey=RepositoryUrl,ParameterValue=https://github.com/masoudog/clinic-app-13jun `
+    ParameterKey=BranchName,ParameterValue=main `
+    ParameterKey=GitHubAccessToken,ParameterValue=$githubToken `
+    ParameterKey=EnvironmentName,ParameterValue=dev `
+  --capabilities CAPABILITY_NAMED_IAM `
+  --region us-east-1
+```
+
+### Full Documentation
+
+See `infra/DEPLOY_WITH_CLOUDFORMATION.md` for:
+- Step-by-step guide with PowerShell commands
+- GitHub token creation
+- Complete deployment script
+- Troubleshooting
+- Stack management (update, delete)
+
+### CloudFormation Resources
+
+**Location**: `infra/amplify-hosting.yml`
+
+**Creates**:
+- AWS::Amplify::App
+- AWS::Amplify::Branch
+- AWS::IAM::Role
+- AWS::CloudWatch::Alarm (optional)
+
+**Parameters**:
+- AppName
+- RepositoryUrl
+- BranchName
+- GitHubAccessToken (NoEcho)
+- EnvironmentName
+
+**Outputs**:
+- AmplifyAppId
+- DefaultDomain
+- BranchUrl (deployment URL)
+- DeploymentUrl
+
+### Benefits
+
+✅ Infrastructure as Code (version controlled)  
+✅ Reproducible deployments  
+✅ Multiple environments (dev/staging/prod)  
+✅ No hardcoded credentials  
+✅ Rollback capability  
+✅ CloudFormation change sets  
+
 ## Architecture Notes
 
 - **Component-Based**: All UI elements are modular, reusable components

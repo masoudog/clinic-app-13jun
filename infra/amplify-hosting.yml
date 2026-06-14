@@ -1,0 +1,250 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Amplify Hosting deployment for Clinic CRM Next.js application'
+
+Parameters:
+  AppName:
+    Type: String
+    Default: clinic-app-13jun
+    Description: Name of the Amplify application
+    MinLength: 1
+    MaxLength: 255
+
+  RepositoryUrl:
+    Type: String
+    Default: https://github.com/masoudog/clinic-app-13jun
+    Description: Full URL to the Git repository (e.g., https://github.com/username/repo-name)
+    AllowedPattern: '^https://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$'
+    ConstraintDescription: Must be a valid GitHub HTTPS URL
+
+  BranchName:
+    Type: String
+    Default: main
+    Description: Git branch name to deploy
+    MinLength: 1
+    MaxLength: 255
+
+  GitHubAccessToken:
+    Type: String
+    NoEcho: true
+    Description: >
+      Personal access token for GitHub with repo permissions.
+      Create at: https://github.com/settings/tokens (requires repo and admin:repo_hook)
+      Do not share this token.
+    MinLength: 40
+    MaxLength: 255
+
+  EnvironmentName:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name for the deployment
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Application Configuration
+        Parameters:
+          - AppName
+          - EnvironmentName
+      - Label:
+          default: Repository Configuration
+        Parameters:
+          - RepositoryUrl
+          - BranchName
+          - GitHubAccessToken
+    ParameterLabels:
+      AppName:
+        default: Application Name
+      RepositoryUrl:
+        default: GitHub Repository URL
+      BranchName:
+        default: Git Branch to Deploy
+      GitHubAccessToken:
+        default: GitHub Personal Access Token
+      EnvironmentName:
+        default: Environment
+
+Resources:
+  # AWS Amplify Application
+  ClinicAmplifyApp:
+    Type: AWS::Amplify::App
+    Properties:
+      Name: !Ref AppName
+      Repository: !Ref RepositoryUrl
+      AccessToken: !Ref GitHubAccessToken
+
+      # Build settings from amplify.yml in repository
+      BuildSpec: |
+        version: 1
+        applications:
+          - appRoot: ./
+            frontend:
+              phases:
+                preBuild:
+                  commands:
+                    - npm ci
+                build:
+                  commands:
+                    - npm run type-check
+                    - npm run build
+              artifacts:
+                baseDirectory: .next
+                files:
+                  - '**/*'
+              cache:
+                paths:
+                  - node_modules/**/*
+                  - .next/cache/**/*
+                  - .next/standalone/**/*
+
+      # Amplify Console configuration
+      EnableBranchAutoDeletion: false
+
+      # Environment variables (optional, can be empty)
+      EnvironmentVariables:
+        - Name: ENVIRONMENT
+          Value: !Ref EnvironmentName
+
+      # IAM role for Amplify to access resources
+      IAMServiceRole: !GetAtt AmplifyServiceRole.Arn
+
+      # Tags for resource tracking
+      Tags:
+        - Key: Application
+          Value: clinic-app
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: CreatedBy
+          Value: CloudFormation
+
+  # IAM Service Role for Amplify
+  AmplifyServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - amplify.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess-Amplify
+
+  # Amplify Branch Configuration (main branch)
+  ClinicAmplifyBranch:
+    Type: AWS::Amplify::Branch
+    Properties:
+      AppId: !GetAtt ClinicAmplifyApp.AppId
+      BranchName: !Ref BranchName
+      Description: !Sub 'Production deployment from ${BranchName} branch'
+
+      # Enable branch as production
+      EnableAutoBuild: true
+      EnableNotification: true
+
+      # Build settings specific to this branch
+      BuildSpec: |
+        version: 1
+        applications:
+          - appRoot: ./
+            frontend:
+              phases:
+                preBuild:
+                  commands:
+                    - npm ci
+                build:
+                  commands:
+                    - npm run type-check
+                    - npm run build
+              artifacts:
+                baseDirectory: .next
+                files:
+                  - '**/*'
+              cache:
+                paths:
+                  - node_modules/**/*
+                  - .next/cache/**/*
+                  - .next/standalone/**/*
+
+      # Optionally set environment variables per branch
+      EnvironmentVariables:
+        - Name: BRANCH_ENV
+          Value: !Sub '${BranchName}-${EnvironmentName}'
+
+      # Tags for resource tracking
+      Tags:
+        - Key: Branch
+          Value: !Ref BranchName
+
+  # CloudWatch Alarm for build failures (optional but recommended)
+  AmplifyBuildFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AppName}-build-failure-${EnvironmentName}'
+      AlarmDescription: Alert when Amplify build fails
+      MetricName: BuildFailure
+      Namespace: AWS/Amplify
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: AppId
+          Value: !GetAtt ClinicAmplifyApp.AppId
+        - Name: BranchName
+          Value: !Ref BranchName
+      TreatMissingData: notBreaching
+
+Outputs:
+  AmplifyAppId:
+    Description: Amplify Application ID
+    Value: !GetAtt ClinicAmplifyApp.AppId
+    Export:
+      Name: !Sub '${AppName}-AppId'
+
+  AmplifyAppArn:
+    Description: Amplify Application ARN
+    Value: !GetAtt ClinicAmplifyApp.Arn
+    Export:
+      Name: !Sub '${AppName}-AppArn'
+
+  DefaultDomain:
+    Description: Default domain for Amplify app
+    Value: !GetAtt ClinicAmplifyApp.DefaultDomain
+    Export:
+      Name: !Sub '${AppName}-DefaultDomain'
+
+  BranchUrl:
+    Description: URL for the deployed branch
+    Value: !Sub 'https://${BranchName}.${ClinicAmplifyApp.DefaultDomain}'
+    Export:
+      Name: !Sub '${AppName}-${BranchName}-Url'
+
+  DeploymentUrl:
+    Description: Full deployment URL
+    Value: !Sub 'https://${BranchName}.${ClinicAmplifyApp.DefaultDomain}'
+
+  RepositoryUrl:
+    Description: Source repository URL
+    Value: !Ref RepositoryUrl
+    Export:
+      Name: !Sub '${AppName}-RepositoryUrl'
+
+  Environment:
+    Description: Deployment environment
+    Value: !Ref EnvironmentName
+    Export:
+      Name: !Sub '${AppName}-Environment'
+
+  BranchName:
+    Description: Deployed branch name
+    Value: !Ref BranchName
+    Export:
+      Name: !Sub '${AppName}-BranchName'

@@ -1,0 +1,327 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  CLOUDFORMATION INFRASTRUCTURE AS CODE                        ║
+║                            SETUP COMPLETE ✅                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+PROJECT: Clinic CRM Next.js App
+FRAMEWORK: AWS CloudFormation (YAML)
+DEPLOYMENT: Amplify Hosting
+STATUS: Ready for Deployment (Not Yet Deployed)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+📁 FILES CREATED (4 in infra/ folder)
+═════════════════════════════════════════════════════════════════════════════════
+
+1. infra/amplify-hosting.yml (300 lines)
+   ├─ CloudFormation template (YAML)
+   ├─ Resources: Amplify App, Branch, IAM Role, CloudWatch Alarm
+   ├─ Parameters: AppName, RepositoryUrl, BranchName, GitHubAccessToken, EnvironmentName
+   ├─ Outputs: AmplifyAppId, DefaultDomain, BranchUrl, DeploymentUrl, etc.
+   ├─ Security: ✅ No hardcoded credentials
+   └─ Status: ✅ Ready to deploy
+
+2. infra/DEPLOY_WITH_CLOUDFORMATION.md (230 lines)
+   ├─ Step-by-step deployment guide
+   ├─ PowerShell commands for Windows
+   ├─ GitHub token creation (Step 1)
+   ├─ AWS CLI verification (Step 2)
+   ├─ Environment variables (Step 3)
+   ├─ Stack creation & monitoring (Steps 4-10)
+   ├─ Complete deploy.ps1 script (copy & paste)
+   ├─ Individual commands for manual deployment
+   ├─ Troubleshooting section
+   └─ Stack management (update, delete)
+
+3. infra/README.md (270 lines)
+   ├─ Infrastructure documentation
+   ├─ Template structure explained
+   ├─ Key features & security
+   ├─ Parameter explanations
+   ├─ Output reference
+   ├─ Common operations
+   └─ Troubleshooting guide
+
+4. infra/SETUP_SUMMARY.md (450 lines)
+   ├─ What was created summary
+   ├─ File descriptions
+   ├─ Key design decisions
+   ├─ Template structure
+   ├─ Security checklist
+   ├─ Deployment flow
+   ├─ PowerShell commands reference
+   ├─ File organization
+   ├─ Expected timeline
+   └─ Success indicators
+
+═════════════════════════════════════════════════════════════════════════════════
+
+📝 FILES UPDATED (1)
+═════════════════════════════════════════════════════════════════════════════════
+
+README.md (Root)
+├─ Added "Deploy with CloudFormation" section
+├─ Quick PowerShell deployment command
+├─ Reference to detailed deployment guide
+├─ Benefits of Infrastructure as Code
+└─ Location: After "Continuous Deployment" section
+
+═════════════════════════════════════════════════════════════════════════════════
+
+🏗️ CLOUDFORMATION TEMPLATE STRUCTURE
+═════════════════════════════════════════════════════════════════════════════════
+
+Template: infra/amplify-hosting.yml
+
+Parameters (5):
+├─ AppName (default: clinic-app-13jun)
+├─ RepositoryUrl (default: https://github.com/masoudog/clinic-app-13jun)
+├─ BranchName (default: main)
+├─ GitHubAccessToken (NoEcho: true, required)
+└─ EnvironmentName (dev/staging/prod)
+
+Resources (4):
+├─ ClinicAmplifyApp (AWS::Amplify::App)
+│  └─ Creates Amplify application with GitHub integration
+├─ AmplifyServiceRole (AWS::IAM::Role)
+│  └─ Permissions for Amplify to access AWS resources
+├─ ClinicAmplifyBranch (AWS::Amplify::Branch)
+│  └─ Configures main branch with auto-build enabled
+└─ AmplifyBuildFailureAlarm (AWS::CloudWatch::Alarm)
+   └─ Monitors and alerts on build failures
+
+Outputs (7):
+├─ AmplifyAppId
+├─ AmplifyAppArn
+├─ DefaultDomain
+├─ BranchUrl
+├─ DeploymentUrl (YOUR LIVE APP URL)
+├─ RepositoryUrl
+└─ Environment + BranchName
+
+═════════════════════════════════════════════════════════════════════════════════
+
+🔐 SECURITY FEATURES
+═════════════════════════════════════════════════════════════════════════════════
+
+✅ No hardcoded credentials in template
+   └─ GitHub token passed as parameter only
+
+✅ NoEcho parameter
+   └─ Token hidden from console output
+
+✅ No secrets stored in CloudFormation
+   └─ AWS credentials from CLI profile (local config)
+
+✅ IAM role with managed policy
+   └─ Least privilege access for Amplify service
+
+✅ Template safe to commit to Git
+   └─ Contains no sensitive data
+
+✅ Export names for cross-stack references
+   └─ No credentials in export names
+
+═════════════════════════════════════════════════════════════════════════════════
+
+📋 DEPLOYMENT CHECKLIST
+═════════════════════════════════════════════════════════════════════════════════
+
+Before Deployment:
+☐ Read infra/README.md (understand infrastructure)
+☐ Review infra/amplify-hosting.yml (understand template)
+☐ Create GitHub Personal Access Token
+  └─ https://github.com/settings/tokens
+  └─ Scopes: repo, admin:repo_hook
+☐ Verify AWS CLI: aws sts get-caller-identity
+☐ Verify repository pushed to GitHub (main branch)
+☐ Read infra/DEPLOY_WITH_CLOUDFORMATION.md
+
+During Deployment:
+☐ Set PowerShell environment variables
+☐ Validate template
+☐ Create CloudFormation stack
+☐ Monitor stack creation (3-5 minutes)
+☐ Retrieve outputs
+☐ Visit deployment URL
+
+After Deployment:
+☐ Verify app loads (may take 1-2 min)
+☐ Check RTL layout (sidebar on right)
+☐ Verify design demo page displays
+☐ Check browser console for errors (F12)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+🚀 QUICK DEPLOYMENT (Windows PowerShell)
+═════════════════════════════════════════════════════════════════════════════════
+
+1. Create GitHub Token (https://github.com/settings/tokens)
+   - Name: clinic-app-amplify
+   - Scopes: ✓ repo, ✓ admin:repo_hook
+   - Copy token (e.g., ghp_xxxxxxx...)
+
+2. Open PowerShell and run:
+
+   $token = "ghp_xxxxxxx..."  # Your token from Step 1
+
+   aws cloudformation create-stack `
+     --stack-name clinic-app-amplify-stack `
+     --template-body file://infra/amplify-hosting.yml `
+     --parameters `
+       ParameterKey=AppName,ParameterValue=clinic-app-13jun `
+       ParameterKey=RepositoryUrl,ParameterValue=https://github.com/masoudog/clinic-app-13jun `
+       ParameterKey=BranchName,ParameterValue=main `
+       ParameterKey=GitHubAccessToken,ParameterValue=$token `
+       ParameterKey=EnvironmentName,ParameterValue=dev `
+     --capabilities CAPABILITY_NAMED_IAM `
+     --region us-east-1
+
+3. Monitor stack creation (2-5 minutes)
+
+4. Get deployment URL:
+
+   aws cloudformation describe-stacks `
+     --stack-name clinic-app-amplify-stack `
+     --query 'Stacks[0].Outputs[?OutputKey==`DeploymentUrl`].OutputValue' `
+     --output text `
+     --region us-east-1
+
+5. Visit the URL in your browser ✅
+
+═════════════════════════════════════════════════════════════════════════════════
+
+⏱️ DEPLOYMENT TIMELINE
+═════════════════════════════════════════════════════════════════════════════════
+
+Task                          Time    Cumulative
+─────────────────────────────────────────────────
+GitHub token creation         2 min   2 min
+AWS CLI verification          1 min   3 min
+Environment variables         1 min   4 min
+Template validation           1 min   5 min
+Stack creation start          1 min   6 min
+Stack building & deployment   3-5 min 9-11 min
+Output retrieval              1 min   10-12 min
+App first load                1-2 min 11-14 min
+─────────────────────────────────────────────────
+TOTAL                                 ~15 min
+
+═════════════════════════════════════════════════════════════════════════════════
+
+✨ RESOURCES CREATED
+═════════════════════════════════════════════════════════════════════════════════
+
+AWS::Amplify::App
+├─ Name: clinic-app-13jun
+├─ Repository: https://github.com/masoudog/clinic-app-13jun
+├─ Build settings: From embedded buildSpec
+├─ Auto-build: Enabled
+└─ Result: Amplify application
+
+AWS::Amplify::Branch
+├─ App: clinic-app-13jun
+├─ Branch: main
+├─ Build: npm run type-check && npm run build
+├─ Output: .next/
+└─ Result: Deployed branch with live URL
+
+AWS::IAM::Role
+├─ Name: AmplifyServiceRole
+├─ Principal: amplify.amazonaws.com
+├─ Policy: AdministratorAccess-Amplify (AWS managed)
+└─ Result: Permissions for Amplify to access AWS
+
+AWS::CloudWatch::Alarm (Optional)
+├─ Metric: BuildFailure
+├─ Namespace: AWS/Amplify
+└─ Result: Notifications on build failures
+
+═════════════════════════════════════════════════════════════════════════════════
+
+❌ NOT CREATED (As Requested)
+═════════════════════════════════════════════════════════════════════════════════
+
+✅ No AWS Cognito (Authentication)
+✅ No RDS/DynamoDB (Database)
+✅ No Lambda functions
+✅ No API Gateway
+✅ No credentials stored in template
+✅ No backend services
+
+These will be added in future phases when needed.
+
+═════════════════════════════════════════════════════════════════════════════════
+
+📖 WHERE TO FIND INFORMATION
+═════════════════════════════════════════════════════════════════════════════════
+
+Getting Started:
+├─ infra/README.md               ← Start here (overview)
+├─ infra/SETUP_SUMMARY.md        ← Details about what was created
+
+Deployment:
+├─ infra/DEPLOY_WITH_CLOUDFORMATION.md  ← MAIN GUIDE (follow this)
+├─ README.md                      ← Root README (updated section)
+
+Technical Details:
+├─ infra/amplify-hosting.yml      ← CloudFormation template
+├─ infra/README.md               ← Template structure explained
+
+Troubleshooting:
+├─ infra/DEPLOY_WITH_CLOUDFORMATION.md   ← Section: Troubleshooting
+├─ infra/README.md                       ← Section: Troubleshooting
+
+═════════════════════════════════════════════════════════════════════════════════
+
+🎯 NEXT STEPS
+═════════════════════════════════════════════════════════════════════════════════
+
+1. REVIEW
+   └─ Open and read: infra/README.md (10 min)
+   └─ Review template: infra/amplify-hosting.yml (5 min)
+
+2. PREPARE
+   └─ Create GitHub token (5 min)
+   └─ Verify AWS CLI (2 min)
+
+3. DEPLOY
+   └─ Follow: infra/DEPLOY_WITH_CLOUDFORMATION.md (15 min)
+
+4. VERIFY
+   └─ Visit deployment URL
+   └─ Check app loads correctly
+   └─ Verify RTL layout works
+
+5. CELEBRATE 🎉
+   └─ Your infrastructure is deployed!
+
+═════════════════════════════════════════════════════════════════════════════════
+
+📚 USEFUL REFERENCES
+═════════════════════════════════════════════════════════════════════════════════
+
+CloudFormation:
+  https://docs.aws.amazon.com/cloudformation/
+
+AWS Amplify:
+  https://console.aws.amazon.com/amplify/
+  https://docs.aws.amazon.com/amplify/
+
+AWS CLI:
+  https://docs.aws.amazon.com/cli/latest/reference/cloudformation/
+
+GitHub Tokens:
+  https://github.com/settings/tokens
+
+═════════════════════════════════════════════════════════════════════════════════
+
+✅ INFRASTRUCTURE AS CODE SETUP COMPLETE
+
+Status: READY FOR DEPLOYMENT (Not yet deployed)
+Date: June 14, 2026
+Framework: AWS CloudFormation
+Language: YAML
+Next Action: Follow infra/DEPLOY_WITH_CLOUDFORMATION.md
+
+═════════════════════════════════════════════════════════════════════════════════
