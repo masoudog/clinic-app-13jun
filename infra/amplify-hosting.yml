@@ -74,43 +74,18 @@ Resources:
     Type: AWS::Amplify::App
     Properties:
       Name: !Ref AppName
-      Repository: !Ref RepositoryUrl
-      AccessToken: !Ref GitHubAccessToken
-
-      # Build settings from amplify.yml in repository
-      BuildSpec: |
-        version: 1
-        applications:
-          - appRoot: ./
-            frontend:
-              phases:
-                preBuild:
-                  commands:
-                    - npm ci
-                build:
-                  commands:
-                    - npm run type-check
-                    - npm run build
-              artifacts:
-                baseDirectory: .next
-                files:
-                  - '**/*'
-              cache:
-                paths:
-                  - node_modules/**/*
-                  - .next/cache/**/*
-                  - .next/standalone/**/*
+      RepositoryUrl: !Ref RepositoryUrl
+      OAuthToken: !Ref GitHubAccessToken
 
       # Amplify Console configuration
       EnableBranchAutoDeletion: false
 
       # Environment variables (optional, can be empty)
       EnvironmentVariables:
-        - Name: ENVIRONMENT
-          Value: !Ref EnvironmentName
+        ENVIRONMENT: !Ref EnvironmentName
 
-      # IAM role for Amplify to access resources
-      IAMServiceRole: !GetAtt AmplifyServiceRole.Arn
+      # IAM role ARN for Amplify to access resources
+      IAMServiceRoleArn: !GetAtt AmplifyServiceRole.Arn
 
       # Tags for resource tracking
       Tags:
@@ -148,34 +123,9 @@ Resources:
       EnableAutoBuild: true
       EnableNotification: true
 
-      # Build settings specific to this branch
-      BuildSpec: |
-        version: 1
-        applications:
-          - appRoot: ./
-            frontend:
-              phases:
-                preBuild:
-                  commands:
-                    - npm ci
-                build:
-                  commands:
-                    - npm run type-check
-                    - npm run build
-              artifacts:
-                baseDirectory: .next
-                files:
-                  - '**/*'
-              cache:
-                paths:
-                  - node_modules/**/*
-                  - .next/cache/**/*
-                  - .next/standalone/**/*
-
-      # Optionally set environment variables per branch
+      # Environment variables per branch
       EnvironmentVariables:
-        - Name: BRANCH_ENV
-          Value: !Sub '${BranchName}-${EnvironmentName}'
+        BRANCH_ENV: !Sub '${BranchName}-${EnvironmentName}'
 
       # Tags for resource tracking
       Tags:
